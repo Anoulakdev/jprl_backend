@@ -1,0 +1,120 @@
+generator client {
+  provider = "prisma-client-js"
+  // previewFeatures = ["omitApi"]
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Gender {
+  Male
+  Female
+}
+
+model User {
+  id               Int         @id @default(autoincrement())
+  username         String      @unique @db.VarChar(255)
+  password         String      @db.VarChar(255)
+  code             String?     @unique @db.VarChar(255)
+  firstname        String      @db.VarChar(255)
+  lastname         String      @db.VarChar(255)
+  actived          String      @default("A") @db.VarChar(50)
+  gender           Gender
+  tel              String?     @db.VarChar(255)
+  userimg          String?     @db.VarChar(255)
+  roleId           Int?
+  role             Role?       @relation(fields: [roleId], references: [id])
+  positionId       Int?
+  position         Position?   @relation(fields: [positionId], references: [id])
+  unitId           Int?
+  unit             Unit?       @relation(fields: [unitId], references: [id])
+  chuId            Int?
+  chu              Chu?        @relation(fields: [chuId], references: [id])
+  datebirth        DateTime?   @db.Timestamptz(0)
+  tribe            String?     @db.VarChar(255)
+  religion         String?     @db.VarChar(255)
+  villagebirth     String?     @db.VarChar(255)
+  districtbirth    String?     @db.VarChar(255)
+  provincebirth    String?     @db.VarChar(255)
+  villagenow       String?     @db.VarChar(255)
+  districtnow      String?     @db.VarChar(255)
+  provincenow      String?     @db.VarChar(255)
+  edusaman         String?     @db.VarChar(255)
+  edulevel         String?     @db.VarChar(255)
+  edusubject       String?     @db.VarChar(255)
+  edutheory        String?     @db.VarChar(255)
+  phaksupport      DateTime?   @db.Timestamptz(0)
+  phakrule         DateTime?   @db.Timestamptz(0)
+  phaksamhong      DateTime?   @db.Timestamptz(0)
+  phaksomboun      DateTime?   @db.Timestamptz(0)
+  phakposition     String?     @db.VarChar(255)
+  phakcard         String?     @db.VarChar(255)
+  phakissuedcard   DateTime?   @db.Timestamptz(0)
+  phakbook         String?     @db.VarChar(255)
+  latcomein        DateTime?   @db.Timestamptz(0)
+  latposition      String?     @db.VarChar(255)
+  kammabancomein   DateTime?   @db.Timestamptz(0)
+  kammabanposition String?     @db.VarChar(255)
+  youthcomein      DateTime?   @db.Timestamptz(0)
+  womencomein      DateTime?   @db.Timestamptz(0)
+  womenposition    String?     @db.VarChar(255)
+  arts             String[]
+  sports           String[]
+  fbusiness        String[]
+  ideas            String[]
+  createdAt        DateTime    @default(now()) @db.Timestamptz(0)
+  updatedAt        DateTime    @updatedAt @db.Timestamptz(0)
+  detailacts       DetailAct[] @relation("userRelation")
+}
+
+model Role {
+  id          Int     @id @default(autoincrement())
+  name        String  @db.VarChar(255)
+  description String? @db.Text
+  users       User[]
+}
+
+model Position {
+  id          Int     @id @default(autoincrement())
+  name        String  @db.VarChar(255)
+  description String? @db.Text
+  users       User[]
+}
+
+model Unit {
+  id    Int    @id @default(autoincrement())
+  no    Int
+  name  String @db.VarChar(255)
+  users User[]
+}
+
+model Chu {
+  id    Int    @id @default(autoincrement())
+  name  String @db.VarChar(255)
+  users User[]
+}
+
+model Activity {
+  id         Int         @id @default(autoincrement())
+  name       String      @db.VarChar(255)
+  dateactive DateTime    @db.Timestamptz(0)
+  createdAt  DateTime    @default(now()) @db.Timestamptz(0)
+  updatedAt  DateTime    @updatedAt @db.Timestamptz(0)
+  detailacts DetailAct[]
+}
+
+model DetailAct {
+  id         Int      @id @default(autoincrement())
+  activityId Int
+  activity   Activity @relation(fields: [activityId], references: [id])
+  userCode   String   @db.VarChar(255)
+  user       User     @relation(fields: [userCode], references: [code], name: "userRelation")
+  content    String   @db.Text
+  lat        Float    @db.DoublePrecision
+  lng        Float    @db.DoublePrecision
+  actimg     String   @db.VarChar(255)
+  createdAt  DateTime @default(now()) @db.Timestamptz(0)
+  updatedAt  DateTime @updatedAt @db.Timestamptz(0)
+}
