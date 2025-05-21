@@ -599,9 +599,16 @@ exports.changepassword = async (req, res) => {
       return res.status(400).json({ error: "ລະ​ຫັດ​ໃໝ່​ບໍ່​ຕົງ​ກັນ" });
     }
 
+    // กำหนดเงื่อนไขค้นหาผู้ใช้ตาม role
+    const userIdentifier =
+      req.user.roleId === 3
+        ? { code: req.user.code }
+        : { username: req.user.username };
+
     const user = await prisma.user.findUnique({
-      where: { code: req.user.code },
+      where: userIdentifier,
     });
+
     if (!user) {
       return res.status(404).json({ error: "User not found" });
     }
@@ -617,13 +624,11 @@ exports.changepassword = async (req, res) => {
     const hashPassword = await bcrypt.hash(password1, salt);
 
     await prisma.user.update({
-      where: { code: req.user.code },
+      where: userIdentifier,
       data: { password: hashPassword },
     });
 
-    res.status(201).json({
-      message: "ອັບ​ເດດ​ລະ​ຫັດ​ສຳ​ເລ​ັດ",
-    });
+    res.status(201).json({ message: "ອັບ​ເດດ​ລະ​ຫັດ​ສຳ​ເລ​ັດ" });
   } catch (err) {
     console.error("Server error:", err);
     res.status(500).send("Server Error");

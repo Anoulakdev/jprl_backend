@@ -25,12 +25,12 @@ exports.login = async (req, res) => {
       });
     }
 
-    if (user.actived !== 'A') {
+    if (user.actived !== "A") {
       return res.status(400).json({
         message: "ລະ​ຫັດ​ຂອງ​ທ່ານ​ໄດ້​ຖືກ​ປິດ​ການ​ໃຊ້​ງານ",
       });
     }
-    
+
     // Step 2 Compare password
     const isMatch = await bcrypt.compare(password, user.password);
     if (!isMatch) {
@@ -51,6 +51,7 @@ exports.login = async (req, res) => {
     // Step 3 Create payload
     const payload = {
       id: userWithAll.id,
+      username: userWithAll.username,
       code: userWithAll.code,
       firstname: userWithAll.firstname,
       lastname: userWithAll.lastname,
@@ -103,7 +104,6 @@ exports.profile = async (req, res) => {
 
     // Exclude sensitive fields (username, password)
     const {
-      username,
       password,
       actived,
       roleId,
