@@ -9,11 +9,14 @@ const {
   update,
   remove,
   chucount,
+  schu,
 } = require("../controllers/chu");
 // middleware
 const { auth, checkRole } = require("../middleware/auth");
 
-router.get("/chus", auth, list);
+router.get("/chus", auth, checkRole([2]), list);
+
+router.get("/chus/schu", auth, schu);
 
 router.get("/chus/count", auth, checkRole([1, 2]), chucount);
 

@@ -85,6 +85,7 @@ CREATE TABLE "Unit" (
 -- CreateTable
 CREATE TABLE "Chu" (
     "id" SERIAL NOT NULL,
+    "unitId" INTEGER NOT NULL,
     "name" VARCHAR(255) NOT NULL,
 
     CONSTRAINT "Chu_pkey" PRIMARY KEY ("id")
@@ -116,6 +117,27 @@ CREATE TABLE "DetailAct" (
     CONSTRAINT "DetailAct_pkey" PRIMARY KEY ("id")
 );
 
+-- CreateTable
+CREATE TABLE "Notice" (
+    "id" SERIAL NOT NULL,
+    "title" VARCHAR(255) NOT NULL,
+    "date" TIMESTAMPTZ(0) NOT NULL,
+    "noticefile" VARCHAR(255) NOT NULL,
+    "createdAt" TIMESTAMPTZ(0) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updatedAt" TIMESTAMPTZ(0) NOT NULL,
+
+    CONSTRAINT "Notice_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
+CREATE TABLE "Organize" (
+    "id" SERIAL NOT NULL,
+    "unitId" INTEGER,
+    "organizeimg" VARCHAR(255),
+
+    CONSTRAINT "Organize_pkey" PRIMARY KEY ("id")
+);
+
 -- CreateIndex
 CREATE UNIQUE INDEX "User_username_key" ON "User"("username");
 
@@ -135,7 +157,13 @@ ALTER TABLE "User" ADD CONSTRAINT "User_unitId_fkey" FOREIGN KEY ("unitId") REFE
 ALTER TABLE "User" ADD CONSTRAINT "User_chuId_fkey" FOREIGN KEY ("chuId") REFERENCES "Chu"("id") ON DELETE SET NULL ON UPDATE CASCADE;
 
 -- AddForeignKey
+ALTER TABLE "Chu" ADD CONSTRAINT "Chu_unitId_fkey" FOREIGN KEY ("unitId") REFERENCES "Unit"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
 ALTER TABLE "DetailAct" ADD CONSTRAINT "DetailAct_activityId_fkey" FOREIGN KEY ("activityId") REFERENCES "Activity"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "DetailAct" ADD CONSTRAINT "DetailAct_userCode_fkey" FOREIGN KEY ("userCode") REFERENCES "User"("code") ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "Organize" ADD CONSTRAINT "Organize_unitId_fkey" FOREIGN KEY ("unitId") REFERENCES "Unit"("id") ON DELETE SET NULL ON UPDATE CASCADE;

@@ -84,16 +84,20 @@ model Position {
 }
 
 model Unit {
-  id    Int    @id @default(autoincrement())
-  no    Int
-  name  String @db.VarChar(255)
-  users User[]
+  id        Int        @id @default(autoincrement())
+  no        Int
+  name      String     @db.VarChar(255)
+  users     User[]
+  chus      Chu[]
+  organizes Organize[]
 }
 
 model Chu {
-  id    Int    @id @default(autoincrement())
-  name  String @db.VarChar(255)
-  users User[]
+  id     Int    @id @default(autoincrement())
+  unitId Int
+  unit   Unit   @relation(fields: [unitId], references: [id])
+  name   String @db.VarChar(255)
+  users  User[]
 }
 
 model Activity {
@@ -117,4 +121,20 @@ model DetailAct {
   actimg     String   @db.VarChar(255)
   createdAt  DateTime @default(now()) @db.Timestamptz(0)
   updatedAt  DateTime @updatedAt @db.Timestamptz(0)
+}
+
+model Notice {
+  id         Int      @id @default(autoincrement())
+  title      String   @db.VarChar(255)
+  date       DateTime @db.Timestamptz(0)
+  noticefile String   @db.VarChar(255)
+  createdAt  DateTime @default(now()) @db.Timestamptz(0)
+  updatedAt  DateTime @updatedAt @db.Timestamptz(0)
+}
+
+model Organize {
+  id          Int     @id @default(autoincrement())
+  unitId      Int?
+  unit        Unit?   @relation(fields: [unitId], references: [id])
+  organizeimg String? @db.VarChar(255)
 }

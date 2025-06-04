@@ -9,11 +9,14 @@ const {
   update,
   remove,
   unitcount,
+  sunit,
 } = require("../controllers/unit");
 // middleware
 const { auth, checkRole } = require("../middleware/auth");
 
 router.get("/units", auth, checkRole([2]), list);
+
+router.get("/units/sunit", auth, sunit);
 
 router.get("/units/count", auth, checkRole([1, 2]), unitcount);
 

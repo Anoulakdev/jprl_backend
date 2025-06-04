@@ -348,7 +348,7 @@ exports.userall = async (req, res) => {
 
     const users = await prisma.user.findMany({
       where,
-      orderBy: [{ positionId: "asc" }, { unitId: "asc" }, { chuId: "asc" }],
+      orderBy: [{ unitId: "asc" }, { chuId: "asc" }, { positionId: "asc" }],
       include: {
         unit: true,
         chu: true,

@@ -9,15 +9,18 @@ const {
   update,
   remove,
   actcount,
+  sactivity,
 } = require("../controllers/activity");
 // middleware
 const { auth, checkRole } = require("../middleware/auth");
 
 router.get("/activitys", auth, checkRole([2, 3]), list);
 
+router.get("/activitys/sactivity", auth, sactivity);
+
 router.get("/activitys/count", auth, checkRole([1, 2]), actcount);
 
-router.get("/activitys/:activityId", auth, checkRole([2, 3]), getById);
+router.get("/activitys/:activityId", auth, checkRole([2]), getById);
 
 router.post("/activitys", auth, checkRole([2]), create);
 

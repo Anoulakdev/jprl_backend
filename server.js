@@ -45,6 +45,28 @@ app.get("/upload/user/:filename", (req, res) => {
   }
 });
 
+app.get("/upload/notice/:filename", (req, res) => {
+  const filePath = path.join(__dirname, "uploads/notice", req.params.filename);
+  if (fs.existsSync(filePath)) {
+    res.sendFile(filePath);
+  } else {
+    res.status(404).json({ error: "File not found" });
+  }
+});
+
+app.get("/upload/organize/:filename", (req, res) => {
+  const filePath = path.join(
+    __dirname,
+    "uploads/organize",
+    req.params.filename
+  );
+  if (fs.existsSync(filePath)) {
+    res.sendFile(filePath);
+  } else {
+    res.status(404).json({ error: "File not found" });
+  }
+});
+
 app.get("/upload/activity/:filename", (req, res) => {
   const filePath = path.join(
     __dirname,

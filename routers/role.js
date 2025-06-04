@@ -8,11 +8,14 @@ const {
   create,
   update,
   remove,
+  srole,
 } = require("../controllers/role");
 // middleware
 const { auth, checkRole } = require("../middleware/auth");
 
 router.get("/roles", auth, checkRole([1]), list);
+
+router.get("/roles/srole", auth, srole);
 
 router.get("/roles/:roleId", auth, checkRole([1]), getById);
 

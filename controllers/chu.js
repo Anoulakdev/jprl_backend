@@ -2,7 +2,7 @@ const prisma = require("../prisma/prisma");
 
 exports.create = async (req, res) => {
   try {
-    const { name } = req.body;
+    const { unitId, name } = req.body;
 
     // Validate input fields
     if (!name) {
@@ -12,6 +12,7 @@ exports.create = async (req, res) => {
     // Create new user in the database
     const newChu = await prisma.chu.create({
       data: {
+        unitId: Number(unitId),
         name,
       },
     });
@@ -31,6 +32,38 @@ exports.list = async (req, res) => {
     const chu = await prisma.chu.findMany({
       orderBy: {
         id: "asc",
+      },
+      include: {
+        unit: true,
+      },
+    });
+
+    res.json(chu);
+  } catch (err) {
+    console.log(err);
+    res.status(500).json({ message: "Server Error" });
+  }
+};
+
+exports.schu = async (req, res) => {
+  try {
+    const { unitId } = req.query;
+
+    let filter = {};
+
+    if (unitId) {
+      filter = {
+        where: { unitId: Number(unitId) },
+      };
+    }
+
+    const chu = await prisma.chu.findMany({
+      orderBy: {
+        id: "asc",
+      },
+      ...filter,
+      include: {
+        unit: true,
       },
     });
 
@@ -66,13 +99,14 @@ exports.getById = async (req, res) => {
 exports.update = async (req, res) => {
   try {
     const { chuId } = req.params;
-    const { name } = req.body;
+    const { unitId, name } = req.body;
 
     const updated = await prisma.chu.update({
       where: {
         id: Number(chuId),
       },
       data: {
+        unitId: Number(unitId),
         name: name,
       },
     });

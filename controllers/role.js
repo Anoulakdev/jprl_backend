@@ -42,6 +42,25 @@ exports.list = async (req, res) => {
   }
 };
 
+exports.srole = async (req, res) => {
+  try {
+    const roles = await prisma.role.findMany({
+      orderBy: {
+        id: "asc",
+      },
+      select: {
+        id: true,
+        name: true,
+      },
+    });
+
+    res.json(roles);
+  } catch (err) {
+    console.log(err);
+    res.status(500).json({ message: "Server Error" });
+  }
+};
+
 exports.getById = async (req, res) => {
   try {
     const { roleId } = req.params;

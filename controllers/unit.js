@@ -42,6 +42,21 @@ exports.list = async (req, res) => {
   }
 };
 
+exports.sunit = async (req, res) => {
+  try {
+    const unit = await prisma.unit.findMany({
+      orderBy: {
+        no: "asc",
+      },
+    });
+
+    res.json(unit);
+  } catch (err) {
+    console.log(err);
+    res.status(500).json({ message: "Server Error" });
+  }
+};
+
 exports.getById = async (req, res) => {
   try {
     const { unitId } = req.params;

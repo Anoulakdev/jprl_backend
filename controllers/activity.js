@@ -57,6 +57,36 @@ exports.list = async (req, res) => {
   }
 };
 
+exports.sactivity = async (req, res) => {
+  try {
+    const activities = await prisma.activity.findMany({
+      orderBy: {
+        dateactive: "desc",
+      },
+      select: {
+        id: true,
+        name: true,
+      },
+    });
+
+    // Format dates
+    const formattedActivities = activities.map((activity) => ({
+      ...activity,
+      createdAt: moment(activity.createdAt)
+        .tz("Asia/Vientiane")
+        .format("YYYY-MM-DD HH:mm:ss"),
+      updatedAt: moment(activity.updatedAt)
+        .tz("Asia/Vientiane")
+        .format("YYYY-MM-DD HH:mm:ss"),
+    }));
+
+    res.json(formattedActivities);
+  } catch (err) {
+    console.log(err);
+    res.status(500).json({ message: "Server Error" });
+  }
+};
+
 exports.getById = async (req, res) => {
   try {
     const { activityId } = req.params;
