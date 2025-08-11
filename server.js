@@ -32,12 +32,14 @@ app.use(
 app.use(morgan("dev"));
 app.use(bodyParser.json());
 
+const UPLOAD_BASE_PATH = process.env.UPLOAD_BASE_PATH;
+
 // Static Middleware (ถ้าจำเป็น)
-app.use("/uploads", express.static(path.join(__dirname, "uploads")));
+app.use("/uploads", express.static(UPLOAD_BASE_PATH));
 
 // File route
 app.get("/upload/user/:filename", (req, res) => {
-  const filePath = path.join(__dirname, "uploads/user", req.params.filename);
+  const filePath = path.join(UPLOAD_BASE_PATH, "user", req.params.filename);
   if (fs.existsSync(filePath)) {
     res.sendFile(filePath);
   } else {
@@ -46,7 +48,7 @@ app.get("/upload/user/:filename", (req, res) => {
 });
 
 app.get("/upload/notice/:filename", (req, res) => {
-  const filePath = path.join(__dirname, "uploads/notice", req.params.filename);
+  const filePath = path.join(UPLOAD_BASE_PATH, "notice", req.params.filename);
   if (fs.existsSync(filePath)) {
     res.sendFile(filePath);
   } else {
@@ -55,11 +57,7 @@ app.get("/upload/notice/:filename", (req, res) => {
 });
 
 app.get("/upload/organize/:filename", (req, res) => {
-  const filePath = path.join(
-    __dirname,
-    "uploads/organize",
-    req.params.filename
-  );
+  const filePath = path.join(UPLOAD_BASE_PATH, "organize", req.params.filename);
   if (fs.existsSync(filePath)) {
     res.sendFile(filePath);
   } else {
@@ -68,11 +66,7 @@ app.get("/upload/organize/:filename", (req, res) => {
 });
 
 app.get("/upload/activity/:filename", (req, res) => {
-  const filePath = path.join(
-    __dirname,
-    "uploads/activity",
-    req.params.filename
-  );
+  const filePath = path.join(UPLOAD_BASE_PATH, "activity", req.params.filename);
   if (fs.existsSync(filePath)) {
     res.sendFile(filePath);
   } else {

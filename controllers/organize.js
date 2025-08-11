@@ -7,7 +7,8 @@ const moment = require("moment-timezone");
 
 const storage = multer.diskStorage({
   destination: function (req, file, cb) {
-    cb(null, "./uploads/organize"); // The directory where user images will be stored
+    // cb(null, "./uploads/organize");
+    cb(null, path.join(process.env.UPLOAD_BASE_PATH, "organize"));
   },
   filename: function (req, file, cb) {
     const uniqueSuffix = Date.now() + "-" + Math.round(Math.random() * 1e9);
@@ -48,8 +49,8 @@ exports.create = (req, res) => {
           // ลบไฟล์ที่อัปโหลดออก (ถ้ามี) เพราะไม่ต้องการเก็บไว้
           if (req.file) {
             const filePath = path.join(
-              __dirname,
-              "../uploads/organize",
+              process.env.UPLOAD_BASE_PATH,
+              "organize",
               req.file.filename
             );
             fs.unlink(filePath, (unlinkErr) => {
@@ -170,8 +171,8 @@ exports.update = async (req, res) => {
         // Only attempt to delete if there is an existing photo path
         if (organizes.organizeimg) {
           const oldOrganizeImgPath = path.join(
-            __dirname,
-            "../uploads/organize",
+            process.env.UPLOAD_BASE_PATH,
+            "organize",
             path.basename(organizes.organizeimg)
           );
           fs.unlink(oldOrganizeImgPath, (err) => {
@@ -222,8 +223,8 @@ exports.remove = async (req, res) => {
     // Step 2: Delete the photo file if it exists
     if (organizes.organizeimg) {
       const organizeImgPath = path.join(
-        __dirname,
-        "../uploads/organize",
+        process.env.UPLOAD_BASE_PATH,
+        "organize",
         organizes.organizeimg
       );
       fs.unlink(organizeImgPath, (err) => {

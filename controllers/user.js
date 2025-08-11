@@ -7,7 +7,8 @@ const moment = require("moment-timezone");
 
 const storage = multer.diskStorage({
   destination: function (req, file, cb) {
-    cb(null, "./uploads/user"); // The directory where user images will be stored
+    // cb(null, "./uploads/user");
+    cb(null, path.join(process.env.UPLOAD_BASE_PATH, "user")); // The directory where user images will be stored
   },
   filename: function (req, file, cb) {
     const uniqueSuffix = Date.now() + "-" + Math.round(Math.random() * 1e9);
@@ -334,8 +335,8 @@ exports.update = async (req, res) => {
         // Only attempt to delete if there is an existing photo path
         if (user.userimg) {
           const oldUserimgPath = path.join(
-            __dirname,
-            "../uploads/user",
+            process.env.UPLOAD_BASE_PATH,
+            "user",
             path.basename(user.userimg)
           );
           fs.unlink(oldUserimgPath, (err) => {
@@ -393,7 +394,11 @@ exports.remove = async (req, res) => {
 
     // Step 2: Delete the photo file if it exists
     if (user.userimg) {
-      const userimgPath = path.join(__dirname, "../uploads/user", user.userimg);
+      const userimgPath = path.join(
+        process.env.UPLOAD_BASE_PATH,
+        "user",
+        user.userimg
+      );
       fs.unlink(userimgPath, (err) => {
         if (err) {
           console.error("Error deleting userimg file: ", err);
@@ -507,8 +512,8 @@ exports.updateprofile = async (req, res) => {
         // Only attempt to delete if there is an existing photo path
         if (user.userimg) {
           const oldUserimgPath = path.join(
-            __dirname,
-            "../uploads/user",
+            process.env.UPLOAD_BASE_PATH,
+            "user",
             path.basename(user.userimg)
           );
           fs.unlink(oldUserimgPath, (err) => {

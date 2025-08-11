@@ -7,7 +7,8 @@ const moment = require("moment-timezone");
 
 const storage = multer.diskStorage({
   destination: function (req, file, cb) {
-    cb(null, "./uploads/notice"); // The directory where user images will be stored
+    // cb(null, "./uploads/notice");
+    cb(null, path.join(process.env.UPLOAD_BASE_PATH, "notice"));
   },
   filename: function (req, file, cb) {
     const uniqueSuffix = Date.now() + "-" + Math.round(Math.random() * 1e9);
@@ -156,8 +157,8 @@ exports.update = async (req, res) => {
         // Only attempt to delete if there is an existing photo path
         if (notices.noticefile) {
           const oldNoticeFilePath = path.join(
-            __dirname,
-            "../uploads/notice",
+            process.env.UPLOAD_BASE_PATH,
+            "notice",
             path.basename(notices.noticefile)
           );
           fs.unlink(oldNoticeFilePath, (err) => {
@@ -209,8 +210,8 @@ exports.remove = async (req, res) => {
     // Step 2: Delete the photo file if it exists
     if (notices.noticefile) {
       const noticefilePath = path.join(
-        __dirname,
-        "../uploads/notice",
+        process.env.UPLOAD_BASE_PATH,
+        "notice",
         notices.noticefile
       );
       fs.unlink(noticefilePath, (err) => {
