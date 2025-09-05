@@ -80,7 +80,7 @@ exports.create = (req, res) => {
         data: {
           username: username || code,
           password: hashPassword,
-          code: code || null,
+          code: username || code,
           firstname,
           lastname,
           gender,
@@ -108,7 +108,9 @@ exports.listsuperadmin = async (req, res) => {
   try {
     const users = await prisma.user.findMany({
       where: {
-        roleId: 2,
+        roleId: {
+          in: [2, 4],
+        },
       },
       orderBy: {
         id: "desc",
