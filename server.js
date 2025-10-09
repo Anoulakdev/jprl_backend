@@ -74,6 +74,15 @@ app.get("/upload/activity/:filename", (req, res) => {
   }
 });
 
+app.get("/upload/meeting/:filename", (req, res) => {
+  const filePath = path.join(UPLOAD_BASE_PATH, "meeting", req.params.filename);
+  if (fs.existsSync(filePath)) {
+    res.sendFile(filePath);
+  } else {
+    res.status(404).json({ error: "File not found" });
+  }
+});
+
 // Other middleware and routes
 app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(swaggerSpec));
 // Step 3 Routing

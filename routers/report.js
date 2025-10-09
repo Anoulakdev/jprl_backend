@@ -11,6 +11,11 @@ const {
   selectdaterange,
   useractall,
   userall,
+  yearusermeet,
+  selectmeetuser,
+  selectmeetimg,
+  selectmeetyearuser,
+  selectmeetdaterange,
 } = require("../controllers/report");
 // middleware
 const { auth, checkRole } = require("../middleware/auth");
@@ -33,5 +38,10 @@ router.get("/reports/selectyearuser", auth, selectyearuser);
 router.get("/reports/selectdaterange", auth, selectdaterange);
 router.get("/reports/useractall", auth, checkRole([2]), useractall);
 router.get("/reports/userall", auth, checkRole([2]), userall);
+router.get("/reports/yearusermeet", auth, yearusermeet);
+router.get("/reports/selectmeetuser", auth, selectmeetuser);
+router.get("/reports/selectmeetimg", auth, selectmeetimg);
+router.get("/reports/selectmeetyearuser", auth, selectmeetyearuser);
+router.get("/reports/selectmeetdaterange", auth, selectmeetdaterange);
 
 module.exports = router;

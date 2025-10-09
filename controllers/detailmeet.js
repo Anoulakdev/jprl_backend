@@ -8,7 +8,7 @@ const moment = require("moment-timezone");
 const storage = multer.diskStorage({
   destination: function (req, file, cb) {
     // cb(null, "./uploads/activity");
-    cb(null, path.join(process.env.UPLOAD_BASE_PATH, "activity"));
+    cb(null, path.join(process.env.UPLOAD_BASE_PATH, "meeting"));
   },
   filename: function (req, file, cb) {
     const uniqueSuffix = Date.now() + "-" + Math.round(Math.random() * 1e9);
@@ -16,7 +16,7 @@ const storage = multer.diskStorage({
   },
 });
 
-const upload = multer({ storage: storage }).single("actimg");
+const upload = multer({ storage: storage }).single("meetimg");
 
 exports.create = (req, res) => {
   upload(req, res, async function (err) {
@@ -36,37 +36,26 @@ exports.create = (req, res) => {
 
     try {
       // Destructure body values
-      const { activityId, userCode, content, lat, lng } = req.body;
+      const { meetingId, userCode, content } = req.body;
 
       // Step 1: Validate input fields
-      if ((!activityId, !content, !userCode)) {
+      if ((!meetingId, !content, !userCode)) {
         return res.status(400).json({ message: "Missing required fields" });
       }
 
-      // Optional: Validate latitude and longitude
-      const latitude = parseFloat(lat);
-      const longitude = parseFloat(lng);
-      if (isNaN(latitude) || isNaN(longitude)) {
-        return res
-          .status(400)
-          .json({ message: "Invalid latitude or longitude" });
-      }
-
       // Step 4: Create new user
-      const newActivity = await prisma.detailAct.create({
+      const newMeeting = await prisma.detailMeet.create({
         data: {
-          activityId: Number(activityId),
+          meetingId: Number(meetingId),
           userCode: userCode,
           content,
-          lat: latitude,
-          lng: longitude,
-          actimg: req.file ? `${req.file.filename}` : null, // Path to the uploaded image
+          meetimg: req.file ? `${req.file.filename}` : null, // Path to the uploaded image
         },
       });
 
       res.status(201).json({
-        message: "User created successfully!",
-        data: newActivity,
+        message: "meeting created successfully!",
+        data: newMeeting,
       });
     } catch (err) {
       console.error("Server error:", err);
@@ -77,7 +66,7 @@ exports.create = (req, res) => {
 
 exports.list = async (req, res) => {
   try {
-    const detailacts = await prisma.detailAct.findMany({
+    const detailmeets = await prisma.detailMeet.findMany({
       where: {
         userCode: req.user.code,
       },
@@ -85,7 +74,7 @@ exports.list = async (req, res) => {
         id: "desc", // Change this to the field you want to sort by
       },
       include: {
-        activity: true,
+        meeting: true,
         user: {
           select: {
             code: true,
@@ -100,12 +89,12 @@ exports.list = async (req, res) => {
     });
 
     // Format dates
-    const formatted = detailacts.map((detailact) => ({
-      ...detailact,
-      createdAt: moment(detailact.createdAt)
+    const formatted = detailmeets.map((detailmeet) => ({
+      ...detailmeet,
+      createdAt: moment(detailmeet.createdAt)
         .tz("Asia/Vientiane")
         .format("YYYY-MM-DD HH:mm:ss"),
-      updatedAt: moment(detailact.updatedAt)
+      updatedAt: moment(detailmeet.updatedAt)
         .tz("Asia/Vientiane")
         .format("YYYY-MM-DD HH:mm:ss"),
     }));
@@ -119,14 +108,14 @@ exports.list = async (req, res) => {
 
 exports.getById = async (req, res) => {
   try {
-    const { detailactId } = req.params;
+    const { detailmeetId } = req.params;
 
-    const detailact = await prisma.detailAct.findUnique({
+    const detailmeet = await prisma.detailMeet.findUnique({
       where: {
-        id: Number(detailactId),
+        id: Number(detailmeetId),
       },
       include: {
-        activity: true,
+        meeting: true,
         user: {
           select: {
             code: true,
@@ -140,17 +129,17 @@ exports.getById = async (req, res) => {
       },
     });
 
-    if (!detailact) {
-      return res.status(404).json({ message: "detailact not found" });
+    if (!detailmeet) {
+      return res.status(404).json({ message: "detailmeet not found" });
     }
 
     // Format dates
     const formatted = {
-      ...detailact,
-      createdAt: moment(detailact.createdAt)
+      ...detailmeet,
+      createdAt: moment(detailmeet.createdAt)
         .tz("Asia/Vientiane")
         .format("YYYY-MM-DD HH:mm:ss"),
-      updatedAt: moment(detailact.updatedAt)
+      updatedAt: moment(detailmeet.updatedAt)
         .tz("Asia/Vientiane")
         .format("YYYY-MM-DD HH:mm:ss"),
     };
@@ -178,31 +167,31 @@ exports.update = async (req, res) => {
     }
 
     try {
-      const { detailactId } = req.params;
-      const { userCode, content, lat, lng } = req.body;
+      const { detailmeetId } = req.params;
+      const { userCode, content } = req.body;
 
       // Step 1: Find the user to update
-      const detailact = await prisma.detailAct.findUnique({
+      const detailmeet = await prisma.detailMeet.findUnique({
         where: {
-          id: Number(detailactId),
+          id: Number(detailmeetId),
         },
       });
 
-      if (!detailact) {
-        return res.status(404).json({ message: "detailact not found" });
+      if (!detailmeet) {
+        return res.status(404).json({ message: "detailmeet not found" });
       }
 
       // Step 2: If a new photo is uploaded and an old photo exists, delete the old photo
-      let actimgPath = detailact.actimg; // Keep old photo path
+      let meetimgPath = detailmeet.meetimg; // Keep old photo path
       if (req.file) {
         // Only attempt to delete if there is an existing photo path
-        if (detailact.actimg) {
-          const oldActimgPath = path.join(
+        if (detailmeet.meetimg) {
+          const oldMeetimgPath = path.join(
             process.env.UPLOAD_BASE_PATH,
-            "activity",
-            path.basename(detailact.actimg)
+            "meeting",
+            path.basename(detailmeet.meetimg)
           );
-          fs.unlink(oldActimgPath, (err) => {
+          fs.unlink(oldMeetimgPath, (err) => {
             if (err) {
               console.error("Error deleting old image: ", err);
             }
@@ -210,20 +199,18 @@ exports.update = async (req, res) => {
         }
 
         // Set the new photo path
-        actimgPath = `${req.file.filename}`;
+        meetimgPath = `${req.file.filename}`;
       }
 
       // Step 3: Update the user record
-      const updated = await prisma.detailAct.update({
+      const updated = await prisma.detailMeet.update({
         where: {
-          id: Number(detailactId),
+          id: Number(detailmeetId),
         },
         data: {
           userCode,
           content,
-          lat: parseFloat(lat),
-          lng: parseFloat(lng),
-          actimg: actimgPath,
+          meetimg: meetimgPath,
         },
       });
 
@@ -237,27 +224,27 @@ exports.update = async (req, res) => {
 
 exports.remove = async (req, res) => {
   try {
-    const { detailactId } = req.params;
+    const { detailmeetId } = req.params;
 
     // Step 1: Find the user by ID
-    const detailact = await prisma.detailAct.findUnique({
+    const detailmeet = await prisma.detailMeet.findUnique({
       where: {
-        id: Number(detailactId),
+        id: Number(detailmeetId),
       },
     });
 
-    if (!detailact) {
-      return res.status(404).json({ message: "detailact not found" });
+    if (!detailmeet) {
+      return res.status(404).json({ message: "detailmeet not found" });
     }
 
     // Step 2: Delete the photo file if it exists
-    if (detailact.actimg) {
-      const actimgPath = path.join(
+    if (detailmeet.meetimg) {
+      const meetimgPath = path.join(
         process.env.UPLOAD_BASE_PATH,
-        "activity",
-        detailact.actimg
+        "meeting",
+        detailmeet.meetimg
       );
-      fs.unlink(actimgPath, (err) => {
+      fs.unlink(meetimgPath, (err) => {
         if (err) {
           console.error("Error deleting userimg file: ", err);
           return res
@@ -268,35 +255,37 @@ exports.remove = async (req, res) => {
     }
 
     // Step 3: Delete the user from the database
-    const removed = await prisma.detailAct.delete({
+    const removed = await prisma.detailMeet.delete({
       where: {
-        id: Number(detailactId),
+        id: Number(detailmeetId),
       },
     });
 
-    res.status(200).json({ message: "User and userimg deleted successfully!" });
+    res
+      .status(200)
+      .json({ message: "Meeting and meetimg deleted successfully!" });
   } catch (err) {
     console.log(err);
     res.status(500).json({ message: "Server Error" });
   }
 };
 
-exports.checkact = async (req, res) => {
+exports.checkmeet = async (req, res) => {
   try {
-    const { activityId, userCode } = req.query;
+    const { meetingId, userCode } = req.query;
 
     // Validate the query parameters
-    if (!activityId || !userCode) {
+    if (!meetingId || !userCode) {
       return res.status(400).json({
         success: false,
-        message: "Missing activityId or userCode",
+        message: "Missing meetingId or userCode",
       });
     }
 
     // Query the database
-    const existingRecord = await prisma.detailAct.findFirst({
+    const existingRecord = await prisma.detailMeet.findFirst({
       where: {
-        activityId: Number(activityId),
+        meetingId: Number(meetingId),
         userCode: userCode,
       },
     });
@@ -317,21 +306,18 @@ exports.checkact = async (req, res) => {
 };
 
 exports.listapproved = async (req, res) => {
-  const { activityId, approved } = req.query;
+  const { meetingId, approved } = req.query;
   try {
-    const detailacts = await prisma.detailAct.findMany({
+    const detailmeets = await prisma.detailMeet.findMany({
       where: {
-        activityId: activityId ? Number(activityId) : undefined,
+        meetingId: meetingId ? Number(meetingId) : undefined,
         approved: Number(approved),
-        user: {
-          unitId: req.user.unitId,
-        },
       },
       orderBy: {
         id: "asc", // Change this to the field you want to sort by
       },
       include: {
-        activity: true,
+        meeting: true,
         user: {
           select: {
             code: true,
@@ -340,7 +326,7 @@ exports.listapproved = async (req, res) => {
             actived: true,
             gender: true,
             tel: true,
-            chu: true,
+            unit: true,
           },
         },
         userAction: {
@@ -355,12 +341,12 @@ exports.listapproved = async (req, res) => {
     });
 
     // Format dates
-    const formatted = detailacts.map((detailact) => ({
-      ...detailact,
-      createdAt: moment(detailact.createdAt)
+    const formatted = detailmeets.map((detailmeet) => ({
+      ...detailmeet,
+      createdAt: moment(detailmeet.createdAt)
         .tz("Asia/Vientiane")
         .format("YYYY-MM-DD HH:mm:ss"),
-      updatedAt: moment(detailact.updatedAt)
+      updatedAt: moment(detailmeet.updatedAt)
         .tz("Asia/Vientiane")
         .format("YYYY-MM-DD HH:mm:ss"),
     }));
@@ -374,27 +360,27 @@ exports.listapproved = async (req, res) => {
 
 exports.actionapproved = async (req, res) => {
   try {
-    const { detailactId } = req.params;
+    const { detailmeetId } = req.params;
     const { approved } = req.body;
 
     // Step 1: Find the user to update
-    const detailact = await prisma.detailAct.findUnique({
+    const detailmeet = await prisma.detailMeet.findUnique({
       where: {
-        id: Number(detailactId),
+        id: Number(detailmeetId),
       },
     });
 
-    if (!detailact) {
-      return res.status(404).json({ message: "detailact not found" });
+    if (!detailmeet) {
+      return res.status(404).json({ message: "detailmeet not found" });
     }
 
-    const updated = await prisma.detailAct.update({
+    const updated = await prisma.detailMeet.update({
       where: {
-        id: Number(detailactId),
+        id: Number(detailmeetId),
       },
       data: {
         approved: Number(approved),
-        userActionCode: req.user.code,
+        userActionId: req.user.id,
       },
     });
 

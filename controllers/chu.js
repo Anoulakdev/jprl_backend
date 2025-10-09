@@ -2,7 +2,7 @@ const prisma = require("../prisma/prisma");
 
 exports.create = async (req, res) => {
   try {
-    const { unitId, name } = req.body;
+    const { unitId, code, name } = req.body;
 
     // Validate input fields
     if (!name) {
@@ -13,6 +13,7 @@ exports.create = async (req, res) => {
     const newChu = await prisma.chu.create({
       data: {
         unitId: Number(unitId),
+        code,
         name,
       },
     });
@@ -99,7 +100,7 @@ exports.getById = async (req, res) => {
 exports.update = async (req, res) => {
   try {
     const { chuId } = req.params;
-    const { unitId, name } = req.body;
+    const { unitId, code, name } = req.body;
 
     const updated = await prisma.chu.update({
       where: {
@@ -107,6 +108,7 @@ exports.update = async (req, res) => {
       },
       data: {
         unitId: Number(unitId),
+        code: code,
         name: name,
       },
     });

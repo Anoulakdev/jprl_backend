@@ -4,6 +4,7 @@ const bcrypt = require("bcrypt");
 const multer = require("multer");
 const path = require("path");
 const moment = require("moment-timezone");
+const axios = require("axios");
 
 const storage = multer.diskStorage({
   destination: function (req, file, cb) {
@@ -26,6 +27,23 @@ const isValidDate = (dateString) => {
 const formatDate = (dateString) => {
   return isValidDate(dateString) ? new Date(dateString) : null;
 };
+
+async function loginAndGetToken() {
+  try {
+    const loginResponse = await axios.post(
+      `${process.env.URL_API}/auth-svc/auth/login`,
+      {
+        username: process.env.USERNAME_API,
+        password: process.env.PASSWORD_API,
+      }
+    );
+
+    return loginResponse.data.data.accessToken;
+  } catch (error) {
+    console.error("Error during login:", error.message);
+    return null;
+  }
+}
 
 exports.create = (req, res) => {
   upload(req, res, async function (err) {
@@ -58,12 +76,6 @@ exports.create = (req, res) => {
         chuId,
       } = req.body;
 
-      // Step 1: Validate input fields
-      if (!firstname || !lastname) {
-        return res.status(400).json({ message: "Missing required fields" });
-      }
-
-      // Step 2: Check if the username already exists
       const checkUser = await prisma.user.findUnique({
         where: { username: username || code },
       });
@@ -71,32 +83,123 @@ exports.create = (req, res) => {
         return res.status(409).json({ message: "Username already exists" });
       }
 
-      // Step 3: Hash default password (you might want to allow password as input)
       const salt = await bcrypt.genSalt(10);
-      const hashPassword = await bcrypt.hash("JPRL1234", salt); // Default password can be changed as needed
+      const hashPassword = await bcrypt.hash(
+        process.env.DEFAULT_PASSWORD,
+        salt
+      );
 
-      // Step 4: Create new user
-      const newUser = await prisma.user.create({
-        data: {
-          username: username || code,
-          password: hashPassword,
-          code: username || code,
-          firstname,
-          lastname,
-          gender,
-          tel,
-          roleId: Number(roleId),
-          positionId: Number(positionId),
-          unitId: Number(unitId),
-          chuId: Number(chuId),
-          userimg: req.file ? `${req.file.filename}` : null, // Path to the uploaded image
-        },
-      });
+      if (username) {
+        const newUser = await prisma.user.create({
+          data: {
+            username: username ? username : code,
+            password: hashPassword,
+            code: username ? username : code,
+            firstname,
+            lastname,
+            gender,
+            tel,
+            roleId: Number(roleId),
+            positionId: Number(positionId),
+            unitId: Number(unitId),
+            chuId: Number(chuId),
+            userimg: req.file ? `${req.file.filename}` : null, // Path to the uploaded image
+          },
+        });
 
-      res.status(201).json({
-        message: "User created successfully!",
-        data: newUser,
-      });
+        res.status(201).json({
+          message: "User created successfully!",
+          data: newUser,
+        });
+      } else {
+        const token = await loginAndGetToken();
+        if (!token) {
+          return res.status(500).json({ message: "Failed to get API token" });
+        }
+
+        const response = await axios.get(
+          `${process.env.URL_API}/organization-svc/employee/get?search=${code}`,
+          { headers: { Authorization: `Bearer ${token}` } }
+        );
+
+        const employees = response.data.data?.employees;
+
+        if (!employees || employees.length === 0) {
+          return res.status(404).json({
+            message: `No employees found for code: ${code}`,
+          });
+        }
+
+        const emp_id = employees[0].emp_id;
+
+        const userResponse = await axios.get(
+          `${process.env.URL_API}/organization-svc/employee/getEmpDetail/${emp_id}`,
+          { headers: { Authorization: `Bearer ${token}` } }
+        );
+
+        const userData = userResponse.data.data;
+        if (!userData || Object.keys(userData).length === 0) {
+          return res.status(404).json({
+            message: `No employee details found for emp_id: ${emp_id}`,
+          });
+        }
+
+        // 🔎 find party info
+        const party1 = userData.party?.find((p) => p.organize_type_id === 1);
+        const party4 = userData.party?.find((p) => p.organize_type_id === 4);
+        const party6 = userData.party?.find((p) => p.organize_type_id === 6);
+        const party8 = userData.party?.find((p) => p.organize_type_id === 8);
+
+        const newUser = await prisma.user.create({
+          data: {
+            username: username ? username : code,
+            password: hashPassword,
+            code: username ? username : code,
+            tel,
+            roleId: Number(roleId),
+            positionId: Number(positionId),
+            unitId: Number(unitId),
+            chuId: Number(chuId),
+            userimg: req.file ? `${req.file.filename}` : null,
+
+            firstname: userData.first_name_la,
+            lastname: userData.last_name_la,
+            gender: userData.gender,
+            datebirth: formatDate(userData.birthday),
+            tribe: userData.nationalitys?.nationality ?? null,
+            religion: userData.religions?.religion_name ?? null,
+            villagebirth: userData.village?.village_name ?? null,
+            districtbirth: userData.district?.district_name ?? null,
+            provincebirth: userData.province?.province_name ?? null,
+            villagenow: userData.curVillage?.village_name ?? null,
+            districtnow: userData.curDistrict?.district_name ?? null,
+            provincenow: userData.curProvince?.province_name ?? null,
+            edulevel:
+              userData.education?.[0]?.educationType?.edu_type_name ?? null,
+            edusubject: userData.education?.[0]?.subject?.subject_name ?? null,
+            latcomein: formatDate(userData.placeOffice?.revolution_date),
+            latposition: userData.placeOffice?.position?.pos_name ?? null,
+            latdepartment:
+              userData.placeOffice?.department?.department_name ?? null,
+            latdivision: userData.placeOffice?.division?.division_name ?? null,
+            latoffice: userData.placeOffice?.office?.office_name ?? null,
+            latunit: userData.placeOffice?.unit?.unit_name ?? null,
+            phaksamhong: formatDate(party8?.party_date),
+            phaksomboun: formatDate(party8?.join_date),
+            phakposition: party8?.party_position ?? null,
+            kammabancomein: formatDate(party6?.party_date),
+            kammabanposition: party6?.party_position ?? null,
+            youthcomein: formatDate(party1?.party_date),
+            womencomein: formatDate(party4?.party_date),
+            womenposition: party4?.party_position ?? null,
+          },
+        });
+
+        return res.status(201).json({
+          message: "User created successfully from API!",
+          data: newUser,
+        });
+      }
     } catch (err) {
       console.error("Server error:", err);
       res.status(500).send("Server Error");
@@ -180,7 +283,7 @@ exports.listadmin = async (req, res) => {
         position: true,
         unit: true,
         chu: true,
-        detailacts: {
+        DetailActUser: {
           take: 1,
         },
       },
@@ -235,7 +338,7 @@ exports.listuser = async (req, res) => {
         position: true,
         unit: true,
         chu: true,
-        detailacts: {
+        DetailActUser: {
           take: 1,
         },
       },
@@ -459,38 +562,38 @@ exports.updateprofile = async (req, res) => {
     try {
       const { userId } = req.params;
       const {
-        firstname,
-        lastname,
-        gender,
+        // firstname,
+        // lastname,
+        // gender,
         tel,
-        datebirth,
-        tribe,
-        religion,
-        villagebirth,
-        districtbirth,
-        provincebirth,
-        villagenow,
-        districtnow,
-        provincenow,
+        // datebirth,
+        // tribe,
+        // religion,
+        // villagebirth,
+        // districtbirth,
+        // provincebirth,
+        // villagenow,
+        // districtnow,
+        // provincenow,
         edusaman,
-        edulevel,
-        edusubject,
+        // edulevel,
+        // edusubject,
         edutheory,
         phaksupport,
         phakrule,
-        phaksamhong,
-        phaksomboun,
-        phakposition,
+        // phaksamhong,
+        // phaksomboun,
+        // phakposition,
         phakcard,
         phakissuedcard,
         phakbook,
-        latcomein,
-        latposition,
-        kammabancomein,
-        kammabanposition,
-        youthcomein,
-        womencomein,
-        womenposition,
+        // latcomein,
+        // latposition,
+        // kammabancomein,
+        // kammabanposition,
+        // youthcomein,
+        // womencomein,
+        // womenposition,
         arts,
         sports,
         fbusiness,
@@ -529,16 +632,16 @@ exports.updateprofile = async (req, res) => {
         userimgPath = `${req.file.filename}`;
       }
 
-      const formatteddatebirth = formatDate(datebirth);
+      // const formatteddatebirth = formatDate(datebirth);
       const formattedphaksupport = formatDate(phaksupport);
       const formattedphakrule = formatDate(phakrule);
-      const formattedphaksamhong = formatDate(phaksamhong);
-      const formattedphaksomboun = formatDate(phaksomboun);
+      // const formattedphaksamhong = formatDate(phaksamhong);
+      // const formattedphaksomboun = formatDate(phaksomboun);
       const formattedphakissuedcard = formatDate(phakissuedcard);
-      const formattedlatcomein = formatDate(latcomein);
-      const formattedkammabancomein = formatDate(kammabancomein);
-      const formattedyouthcomein = formatDate(youthcomein);
-      const formattedwomencomein = formatDate(womencomein);
+      // const formattedlatcomein = formatDate(latcomein);
+      // const formattedkammabancomein = formatDate(kammabancomein);
+      // const formattedyouthcomein = formatDate(youthcomein);
+      // const formattedwomencomein = formatDate(womencomein);
 
       // Step 3: Update the user record
       const updated = await prisma.user.update({
@@ -546,38 +649,38 @@ exports.updateprofile = async (req, res) => {
           id: Number(userId),
         },
         data: {
-          firstname,
-          lastname,
-          gender,
+          // firstname,
+          // lastname,
+          // gender,
           tel,
-          datebirth: formatteddatebirth,
-          tribe,
-          religion,
-          villagebirth,
-          districtbirth,
-          provincebirth,
-          villagenow,
-          districtnow,
-          provincenow,
+          // datebirth: formatteddatebirth,
+          // tribe,
+          // religion,
+          // villagebirth,
+          // districtbirth,
+          // provincebirth,
+          // villagenow,
+          // districtnow,
+          // provincenow,
           edusaman,
-          edulevel,
-          edusubject,
+          // edulevel,
+          // edusubject,
           edutheory,
           phaksupport: formattedphaksupport,
           phakrule: formattedphakrule,
-          phaksamhong: formattedphaksamhong,
-          phaksomboun: formattedphaksomboun,
-          phakposition,
+          // phaksamhong: formattedphaksamhong,
+          // phaksomboun: formattedphaksomboun,
+          // phakposition,
           phakcard,
           phakissuedcard: formattedphakissuedcard,
           phakbook,
-          latcomein: formattedlatcomein,
-          latposition,
-          kammabancomein: formattedkammabancomein,
-          kammabanposition,
-          youthcomein: formattedyouthcomein,
-          womencomein: formattedwomencomein,
-          womenposition,
+          // latcomein: formattedlatcomein,
+          // latposition,
+          // kammabancomein: formattedkammabancomein,
+          // kammabanposition,
+          // youthcomein: formattedyouthcomein,
+          // womencomein: formattedwomencomein,
+          // womenposition,
           arts,
           sports,
           fbusiness,
@@ -654,7 +757,7 @@ exports.resetpassword = async (req, res) => {
     }
 
     const salt = await bcrypt.genSalt(10);
-    const hashPassword = await bcrypt.hash("JPRL1234", salt);
+    const hashPassword = await bcrypt.hash(process.env.DEFAULT_PASSWORD, salt);
 
     await prisma.user.update({
       where: { id: Number(userId) },
@@ -662,7 +765,7 @@ exports.resetpassword = async (req, res) => {
     });
 
     res.status(201).json({
-      message: "ລີ​ເສັດ​ລະ​ຫັດ​ສຳ​ເລ​ັດ",
+      message: "ຣີ​ເສັດ​ລະ​ຫັດ​ສຳ​ເລ​ັດ",
     });
   } catch (err) {
     console.error("Server error:", err);
