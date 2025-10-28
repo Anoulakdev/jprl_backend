@@ -1,6 +1,7 @@
 const prisma = require("../prisma/prisma");
 const moment = require("moment-timezone");
 
+// Activity
 exports.yearuseract = async (req, res) => {
   try {
     const { year } = req.query;
@@ -290,6 +291,71 @@ exports.selectdaterange = async (req, res) => {
   }
 };
 
+exports.selectdaterangecount = async (req, res) => {
+  try {
+    const { datestart, dateend } = req.query;
+    if (!datestart) {
+      return res.status(400).json({ message: "datestart is required" });
+    }
+    if (!dateend) {
+      return res.status(400).json({ message: "dateend is required" });
+    }
+
+    const startOfDate = new Date(`${datestart}T00:00:00+07:00`);
+    const endOfDate = new Date(`${dateend}T23:59:59+07:00`);
+
+    // ค้นหา activity ทั้งหมดในช่วงเวลา พร้อม detailacts ที่ผ่านการ approved
+    const activities = await prisma.activity.findMany({
+      orderBy: {
+        dateactive: "asc",
+      },
+      where: {
+        dateactive: {
+          gte: startOfDate,
+          lte: endOfDate,
+        },
+      },
+      include: {
+        detailacts: {
+          where: { approved: 2 },
+          include: {
+            user: {
+              select: {
+                gender: true,
+              },
+            },
+          },
+        },
+      },
+    });
+
+    // จัดรูปแบบข้อมูลที่ต้องการแสดง
+    const result = activities.map((act) => {
+      const total = act.detailacts.length;
+      const Male = act.detailacts.filter(
+        (d) => d.user?.gender === "Male"
+      ).length;
+      const Female = act.detailacts.filter(
+        (d) => d.user?.gender === "Female"
+      ).length;
+
+      return {
+        activityId: act.id,
+        activityName: act.name,
+        dateactive: act.dateactive,
+        total,
+        Male,
+        Female,
+      };
+    });
+
+    res.json(result);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: "Server Error" });
+  }
+};
+
 exports.useractall = async (req, res) => {
   try {
     const { datestart, dateend, userCode } = req.query;
@@ -384,6 +450,7 @@ exports.userall = async (req, res) => {
   }
 };
 
+// Meeting
 exports.yearusermeet = async (req, res) => {
   try {
     const { year } = req.query;
@@ -669,6 +736,121 @@ exports.selectmeetdaterange = async (req, res) => {
     res.json(formattedResult);
   } catch (err) {
     console.error(err);
+    res.status(500).json({ message: "Server Error" });
+  }
+};
+
+exports.selectmeetdaterangecount = async (req, res) => {
+  try {
+    const { datestart, dateend } = req.query;
+    if (!datestart) {
+      return res.status(400).json({ message: "datestart is required" });
+    }
+    if (!dateend) {
+      return res.status(400).json({ message: "dateend is required" });
+    }
+
+    const startOfDate = new Date(`${datestart}T00:00:00+07:00`);
+    const endOfDate = new Date(`${dateend}T23:59:59+07:00`);
+
+    // ค้นหา meeting ทั้งหมดในช่วงเวลา พร้อม detailacts ที่ผ่านการ approved
+    const meetings = await prisma.meeting.findMany({
+      orderBy: {
+        dateactive: "asc",
+      },
+      where: {
+        dateactive: {
+          gte: startOfDate,
+          lte: endOfDate,
+        },
+      },
+      include: {
+        detailmeets: {
+          where: { approved: 2 },
+          include: {
+            user: {
+              select: {
+                gender: true,
+              },
+            },
+          },
+        },
+      },
+    });
+
+    // จัดรูปแบบข้อมูลที่ต้องการแสดง
+    const result = meetings.map((meet) => {
+      const total = meet.detailmeets.length;
+      const Male = meet.detailmeets.filter(
+        (d) => d.user?.gender === "Male"
+      ).length;
+      const Female = meet.detailmeets.filter(
+        (d) => d.user?.gender === "Female"
+      ).length;
+
+      return {
+        meetingId: meet.id,
+        meetingName: meet.name,
+        dateactive: meet.dateactive,
+        total,
+        Male,
+        Female,
+      };
+    });
+
+    res.json(result);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: "Server Error" });
+  }
+};
+
+exports.usermeetall = async (req, res) => {
+  try {
+    const { datestart, dateend, userCode } = req.query;
+
+    if (!datestart) {
+      return res.status(400).json({ message: "datestart is required" });
+    }
+    if (!dateend) {
+      return res.status(400).json({ message: "dateend is required" });
+    }
+
+    if (!userCode) {
+      return res.status(400).json({ message: "userCode is required" });
+    }
+
+    const startOfDate = new Date(`${datestart}T00:00:00+07:00`);
+    const endOfDate = new Date(`${dateend}T23:59:59+07:00`);
+
+    const detailmeets = await prisma.detailMeet.findMany({
+      where: {
+        approved: 2,
+        userCode: userCode,
+        createdAt: {
+          gte: new Date(startOfDate.toISOString()),
+          lte: new Date(endOfDate.toISOString()),
+        },
+      },
+      include: {
+        meeting: true,
+      },
+    });
+
+    // Format dates for each activity
+    const formattedMeet = detailmeets.map((meet) => ({
+      ...meet,
+      createdAt: moment(meet.createdAt)
+        .tz("Asia/Vientiane")
+        .format("YYYY-MM-DD HH:mm:ss"),
+      updatedAt: moment(meet.updatedAt)
+        .tz("Asia/Vientiane")
+        .format("YYYY-MM-DD HH:mm:ss"),
+    }));
+
+    res.json(formattedMeet);
+  } catch (err) {
+    console.log(err);
     res.status(500).json({ message: "Server Error" });
   }
 };

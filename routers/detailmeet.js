@@ -13,15 +13,20 @@ const {
   actionapproved,
 } = require("../controllers/detailmeet");
 // middleware
-const { auth } = require("../middleware/auth");
+const { auth, checkRole } = require("../middleware/auth");
 
-router.get("/detailmeets", auth, list);
-router.get("/detailmeets/checkmeet", auth, checkmeet);
-router.get("/detailmeets/listapproved", auth, listapproved);
-router.get("/detailmeets/:detailmeetId", auth, getById);
-router.post("/detailmeets", auth, create);
-router.put("/detailmeets/:detailmeetId", auth, update);
-router.put("/detailmeets/approved/:detailmeetId", auth, actionapproved);
-router.delete("/detailmeets/:detailmeetId", auth, remove);
+router.get("/detailmeets", auth, checkRole([3]), list);
+router.get("/detailmeets/checkmeet", auth, checkRole([3]), checkmeet);
+router.get("/detailmeets/listapproved", auth, checkRole([2]), listapproved);
+router.get("/detailmeets/:detailmeetId", auth, checkRole([3]), getById);
+router.post("/detailmeets", auth, checkRole([3]), create);
+router.put("/detailmeets/:detailmeetId", auth, checkRole([3]), update);
+router.put(
+  "/detailmeets/approved/:detailmeetId",
+  auth,
+  checkRole([2]),
+  actionapproved
+);
+router.delete("/detailmeets/:detailmeetId", auth, checkRole([3]), remove);
 
 module.exports = router;

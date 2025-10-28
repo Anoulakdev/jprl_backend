@@ -9,6 +9,7 @@ const {
   selectactimg,
   selectyearuser,
   selectdaterange,
+  selectdaterangecount,
   useractall,
   userall,
   yearusermeet,
@@ -16,6 +17,8 @@ const {
   selectmeetimg,
   selectmeetyearuser,
   selectmeetdaterange,
+  selectmeetdaterangecount,
+  usermeetall,
 } = require("../controllers/report");
 // middleware
 const { auth, checkRole } = require("../middleware/auth");
@@ -31,17 +34,43 @@ const { auth, checkRole } = require("../middleware/auth");
 
 // router.use("/reports", limiter);
 
-router.get("/reports/yearuseract", auth, yearuseract);
-router.get("/reports/selectactuser", auth, selectactuser);
-router.get("/reports/selectactimg", auth, selectactimg);
-router.get("/reports/selectyearuser", auth, selectyearuser);
-router.get("/reports/selectdaterange", auth, selectdaterange);
+// Activity
+router.get("/reports/yearuseract", auth, checkRole([3]), yearuseract);
+router.get("/reports/selectactuser", auth, checkRole([2]), selectactuser);
+router.get("/reports/selectactimg", auth, checkRole([2]), selectactimg);
+router.get("/reports/selectyearuser", auth, checkRole([2]), selectyearuser);
+router.get("/reports/selectdaterange", auth, checkRole([2]), selectdaterange);
+router.get(
+  "/reports/selectdaterangecount",
+  auth,
+  checkRole([2]),
+  selectdaterangecount
+);
 router.get("/reports/useractall", auth, checkRole([2]), useractall);
 router.get("/reports/userall", auth, checkRole([2]), userall);
-router.get("/reports/yearusermeet", auth, yearusermeet);
-router.get("/reports/selectmeetuser", auth, selectmeetuser);
-router.get("/reports/selectmeetimg", auth, selectmeetimg);
-router.get("/reports/selectmeetyearuser", auth, selectmeetyearuser);
-router.get("/reports/selectmeetdaterange", auth, selectmeetdaterange);
+
+// Meeting
+router.get("/reports/yearusermeet", auth, checkRole([3]), yearusermeet);
+router.get("/reports/selectmeetuser", auth, checkRole([2]), selectmeetuser);
+router.get("/reports/selectmeetimg", auth, checkRole([2]), selectmeetimg);
+router.get(
+  "/reports/selectmeetyearuser",
+  auth,
+  checkRole([2]),
+  selectmeetyearuser
+);
+router.get(
+  "/reports/selectmeetdaterange",
+  auth,
+  checkRole([2]),
+  selectmeetdaterange
+);
+router.get(
+  "/reports/selectmeetdaterangecount",
+  auth,
+  checkRole([2]),
+  selectmeetdaterangecount
+);
+router.get("/reports/usermeetall", auth, checkRole([2]), usermeetall);
 
 module.exports = router;
