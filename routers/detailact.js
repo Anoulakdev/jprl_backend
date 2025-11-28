@@ -18,7 +18,7 @@ const { auth, checkRole } = require("../middleware/auth");
 router.get("/detailacts", auth, checkRole([3]), list);
 router.get("/detailacts/checkact", auth, checkRole([3]), checkact);
 router.get("/detailacts/listapproved", auth, checkRole([3]), listapproved);
-router.get("/detailacts/:detailactId", auth, checkRole([3]), getById);
+router.get("/detailacts/:detailactId", auth, checkRole([2, 3]), getById);
 router.post("/detailacts", auth, checkRole([3]), create);
 router.put("/detailacts/:detailactId", auth, checkRole([3]), update);
 router.put(

@@ -9,6 +9,13 @@ exports.create = async (req, res) => {
       return res.status(400).json({ message: "Invalid input fields" });
     }
 
+    const checkChu = await prisma.chu.findFirst({
+      where: { code: code },
+    });
+    if (checkChu) {
+      return res.status(409).json({ message: "chu already exists" });
+    }
+
     // Create new user in the database
     const newChu = await prisma.chu.create({
       data: {
@@ -32,7 +39,7 @@ exports.list = async (req, res) => {
   try {
     const chu = await prisma.chu.findMany({
       orderBy: {
-        id: "asc",
+        id: "desc",
       },
       include: {
         unit: true,
