@@ -15,110 +15,110 @@ exports.login = async (req, res) => {
       return res.status(400).json({ message: "ກະ​ລຸ​ນາ​ເພີ່ມລະ​ຫັດ" });
     }
 
-    async function loginAndGetToken() {
-      try {
-        const loginResponse = await axios.post(
-          `${process.env.URL_API}/auth-svc/auth/login`,
-          {
-            username: process.env.USERNAME_API,
-            password: process.env.PASSWORD_API,
-          }
-        );
+    // async function loginAndGetToken() {
+    //   try {
+    //     const loginResponse = await axios.post(
+    //       `${process.env.URL_API}/auth-svc/auth/login`,
+    //       {
+    //         username: process.env.USERNAME_API,
+    //         password: process.env.PASSWORD_API,
+    //       }
+    //     );
 
-        return loginResponse.data.data.accessToken;
-      } catch (error) {
-        console.error("Error during login:", error.message);
-        return null;
-      }
-    }
+    //     return loginResponse.data.data.accessToken;
+    //   } catch (error) {
+    //     console.error("Error during login:", error.message);
+    //     return null;
+    //   }
+    // }
 
-    const token = await loginAndGetToken();
+    // const token = await loginAndGetToken();
 
-    if (token) {
-      try {
-        const response = await axios.get(
-          `${process.env.URL_API}/organization-svc/employee/get?search=${username}`,
-          {
-            headers: { Authorization: `Bearer ${token}` },
-          }
-        );
+    // if (token) {
+    //   try {
+    //     const response = await axios.get(
+    //       `${process.env.URL_API}/organization-svc/employee/get?search=${username}`,
+    //       {
+    //         headers: { Authorization: `Bearer ${token}` },
+    //       }
+    //     );
 
-        const employees = response.data.data?.employees;
+    //     const employees = response.data.data?.employees;
 
-        if (employees && employees.length > 0) {
-          const emp_id = employees[0].emp_id;
+    //     if (employees && employees.length > 0) {
+    //       const emp_id = employees[0].emp_id;
 
-          const userResponse = await axios.get(
-            `${process.env.URL_API}/organization-svc/employee/getEmpDetail/${emp_id}`,
-            {
-              headers: { Authorization: `Bearer ${token}` },
-            }
-          );
+    //       const userResponse = await axios.get(
+    //         `${process.env.URL_API}/organization-svc/employee/getEmpDetail/${emp_id}`,
+    //         {
+    //           headers: { Authorization: `Bearer ${token}` },
+    //         }
+    //       );
 
-          const userData = userResponse.data.data;
+    //       const userData = userResponse.data.data;
 
-          if (userData && Object.keys(userData).length > 0) {
-            // หาแต่ละ organize_type_id
-            const party1 = userData.party?.find(
-              (p) => p.organize_type_id === 1
-            );
-            const party4 = userData.party?.find(
-              (p) => p.organize_type_id === 4
-            );
-            const party6 = userData.party?.find(
-              (p) => p.organize_type_id === 6
-            );
-            const party8 = userData.party?.find(
-              (p) => p.organize_type_id === 8
-            );
+    //       if (userData && Object.keys(userData).length > 0) {
+    //         // หาแต่ละ organize_type_id
+    //         const party1 = userData.party?.find(
+    //           (p) => p.organize_type_id === 1
+    //         );
+    //         const party4 = userData.party?.find(
+    //           (p) => p.organize_type_id === 4
+    //         );
+    //         const party6 = userData.party?.find(
+    //           (p) => p.organize_type_id === 6
+    //         );
+    //         const party8 = userData.party?.find(
+    //           (p) => p.organize_type_id === 8
+    //         );
 
-            await prisma.user.update({
-              where: { code: userData.emp_code },
-              data: {
-                firstname: userData.first_name_la,
-                lastname: userData.last_name_la,
-                gender: userData.gender,
-                datebirth: userData.birthday ?? null,
-                tribe: userData.nationalitys?.nationality ?? null,
-                religion: userData.religions?.religion_name ?? null,
-                villagebirth: userData.village?.village_name ?? null,
-                districtbirth: userData.district?.district_name ?? null,
-                provincebirth: userData.province?.province_name ?? null,
-                villagenow: userData.curVillage?.village_name ?? null,
-                districtnow: userData.curDistrict?.district_name ?? null,
-                provincenow: userData.curProvince?.province_name ?? null,
-                edulevel:
-                  userData.education?.[0]?.educationType?.edu_type_name ?? null,
-                edusubject:
-                  userData.education?.[0]?.subject?.subject_name ?? null,
-                latcomein: userData.placeOffice?.revolution_date ?? null,
-                latposition: userData.placeOffice?.position?.pos_name ?? null,
-                latdepartment:
-                  userData.placeOffice?.department?.department_name ?? null,
-                latdivision:
-                  userData.placeOffice?.division?.division_name ?? null,
-                latoffice: userData.placeOffice?.office?.office_name ?? null,
-                latunit: userData.placeOffice?.unit?.unit_name ?? null,
-                phaksamhong: party8?.party_date ?? null,
-                phaksomboun: party8?.join_date ?? null,
-                phakposition: party8?.party_position ?? null,
-                kammabancomein: party6?.party_date ?? null,
-                kammabanposition: party6?.party_position ?? null,
-                youthcomein: party1?.party_date ?? null,
-                womencomein: party4?.party_date ?? null,
-                womenposition: party4?.party_position ?? null,
-              },
-            });
-          }
-        } else {
-          console.warn(
-            `No employees found for username: ${username}. Skipping sync.`
-          );
-        }
-      } catch (err) {
-        console.warn("Failed to fetch employee info. Continuing without sync.");
-      }
-    }
+    //         await prisma.user.update({
+    //           where: { code: userData.emp_code },
+    //           data: {
+    //             firstname: userData.first_name_la,
+    //             lastname: userData.last_name_la,
+    //             gender: userData.gender,
+    //             datebirth: userData.birthday ?? null,
+    //             tribe: userData.nationalitys?.nationality ?? null,
+    //             religion: userData.religions?.religion_name ?? null,
+    //             villagebirth: userData.village?.village_name ?? null,
+    //             districtbirth: userData.district?.district_name ?? null,
+    //             provincebirth: userData.province?.province_name ?? null,
+    //             villagenow: userData.curVillage?.village_name ?? null,
+    //             districtnow: userData.curDistrict?.district_name ?? null,
+    //             provincenow: userData.curProvince?.province_name ?? null,
+    //             edulevel:
+    //               userData.education?.[0]?.educationType?.edu_type_name ?? null,
+    //             edusubject:
+    //               userData.education?.[0]?.subject?.subject_name ?? null,
+    //             latcomein: userData.placeOffice?.revolution_date ?? null,
+    //             latposition: userData.placeOffice?.position?.pos_name ?? null,
+    //             latdepartment:
+    //               userData.placeOffice?.department?.department_name ?? null,
+    //             latdivision:
+    //               userData.placeOffice?.division?.division_name ?? null,
+    //             latoffice: userData.placeOffice?.office?.office_name ?? null,
+    //             latunit: userData.placeOffice?.unit?.unit_name ?? null,
+    //             phaksamhong: party8?.party_date ?? null,
+    //             phaksomboun: party8?.join_date ?? null,
+    //             phakposition: party8?.party_position ?? null,
+    //             kammabancomein: party6?.party_date ?? null,
+    //             kammabanposition: party6?.party_position ?? null,
+    //             youthcomein: party1?.party_date ?? null,
+    //             womencomein: party4?.party_date ?? null,
+    //             womenposition: party4?.party_position ?? null,
+    //           },
+    //         });
+    //       }
+    //     } else {
+    //       console.warn(
+    //         `No employees found for username: ${username}. Skipping sync.`
+    //       );
+    //     }
+    //   } catch (err) {
+    //     console.warn("Failed to fetch employee info. Continuing without sync.");
+    //   }
+    // }
 
     // Step 1 Check Email in DB
     const user = await prisma.user.findUnique({
