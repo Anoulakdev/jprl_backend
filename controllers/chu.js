@@ -39,7 +39,9 @@ exports.list = async (req, res) => {
   try {
     const chu = await prisma.chu.findMany({
       orderBy: {
-        id: "desc",
+        unit: {
+          no: "asc",
+        },
       },
       include: {
         unit: true,
