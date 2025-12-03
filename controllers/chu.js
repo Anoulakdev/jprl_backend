@@ -38,11 +38,7 @@ exports.create = async (req, res) => {
 exports.list = async (req, res) => {
   try {
     const chu = await prisma.chu.findMany({
-      orderBy: {
-        unit: {
-          no: "asc",
-        },
-      },
+      orderBy: [{ unit: { no: "asc" } }, { code: "asc" }],
       include: {
         unit: true,
       },
