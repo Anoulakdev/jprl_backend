@@ -38,7 +38,7 @@ const { auth, checkRole } = require("../middleware/auth");
 router.get("/reports/yearuseract", auth, checkRole([3]), yearuseract);
 router.get("/reports/selectactuser", auth, checkRole([2]), selectactuser);
 router.get("/reports/selectactimg", auth, checkRole([2]), selectactimg);
-router.get("/reports/selectyearuser", auth, checkRole([2]), selectyearuser);
+router.get("/reports/selectyearuser", auth, checkRole([1, 2]), selectyearuser);
 router.get("/reports/selectdaterange", auth, checkRole([2]), selectdaterange);
 router.get(
   "/reports/selectdaterangecount",

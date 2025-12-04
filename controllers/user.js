@@ -99,10 +99,10 @@ exports.create = (req, res) => {
             lastname,
             gender,
             tel,
-            roleId: Number(roleId),
-            positionId: Number(positionId),
-            unitId: Number(unitId),
-            chuId: Number(chuId),
+            roleId: roleId ? Number(roleId) : null,
+            positionId: positionId ? Number(positionId) : null,
+            unitId: unitId ? Number(unitId) : null,
+            chuId: chuId ? Number(chuId) : null,
             userimg: req.file ? `${req.file.filename}` : null, // Path to the uploaded image
           },
         });
@@ -156,10 +156,10 @@ exports.create = (req, res) => {
             password: hashPassword,
             code: username ? username : code,
             tel,
-            roleId: Number(roleId),
-            positionId: Number(positionId),
-            unitId: Number(unitId),
-            chuId: Number(chuId),
+            roleId: roleId ? Number(roleId) : null,
+            positionId: positionId ? Number(positionId) : null,
+            unitId: unitId ? Number(unitId) : null,
+            chuId: chuId ? Number(chuId) : null,
             userimg: req.file ? `${req.file.filename}` : null,
 
             firstname: userData.first_name_la,
@@ -200,6 +200,139 @@ exports.create = (req, res) => {
           data: newUser,
         });
       }
+    } catch (err) {
+      console.error("Server error:", err);
+      res.status(500).send("Server Error");
+    }
+  });
+};
+
+exports.ngcreate = (req, res) => {
+  upload(req, res, async function (err) {
+    if (err instanceof multer.MulterError) {
+      // Handle multer-specific errors
+      return res.status(500).json({
+        message: "Multer error occurred when uploading.",
+        error: err.message,
+      });
+    } else if (err) {
+      // Handle other types of errors
+      return res.status(500).json({
+        message: "Unknown error occurred when uploading.",
+        error: err.message,
+      });
+    }
+
+    try {
+      // Destructure body values
+      const {
+        code,
+        firstname,
+        lastname,
+        gender,
+        tel,
+        roleId,
+        positionId,
+        unitId,
+        chuId,
+        datebirth,
+        tribe,
+        religion,
+        villagebirth,
+        districtbirth,
+        provincebirth,
+        villagenow,
+        districtnow,
+        provincenow,
+        edusaman,
+        edulevel,
+        edusubject,
+        edutheory,
+        latcomein,
+        latposition,
+        latdepartment,
+        latdivision,
+        latunit,
+        phaksupport,
+        phakrule,
+        phaksamhong,
+        phaksomboun,
+        phakposition,
+        phakcard,
+        phakissuedcard,
+        phakbook,
+        kammabancomein,
+        kammabanposition,
+        youthcomein,
+        womencomein,
+        womenposition,
+      } = req.body;
+
+      const checkUser = await prisma.user.findUnique({
+        where: { username: code },
+      });
+      if (checkUser) {
+        return res.status(409).json({ message: "Username already exists" });
+      }
+
+      const salt = await bcrypt.genSalt(10);
+      const hashPassword = await bcrypt.hash(
+        process.env.DEFAULT_PASSWORD,
+        salt
+      );
+
+      const newUser = await prisma.user.create({
+        data: {
+          username: code,
+          password: hashPassword,
+          code: code,
+          firstname,
+          lastname,
+          gender,
+          tel,
+          roleId: roleId ? Number(roleId) : null,
+          positionId: positionId ? Number(positionId) : null,
+          unitId: unitId ? Number(unitId) : null,
+          chuId: chuId ? Number(chuId) : null,
+          userimg: req.file ? `${req.file.filename}` : null,
+          datebirth: formatDate(datebirth),
+          tribe,
+          religion,
+          villagebirth,
+          districtbirth,
+          provincebirth,
+          villagenow,
+          districtnow,
+          provincenow,
+          edusaman,
+          edulevel,
+          edusubject,
+          edutheory,
+          latcomein: formatDate(latcomein),
+          latposition,
+          latdepartment,
+          latdivision,
+          latunit,
+          phaksupport: formatDate(phaksupport),
+          phakrule: formatDate(phakrule),
+          phaksamhong: formatDate(phaksamhong),
+          phaksomboun: formatDate(phaksomboun),
+          phakposition,
+          phakcard,
+          phakissuedcard: formatDate(phakissuedcard),
+          phakbook,
+          kammabancomein: formatDate(kammabancomein),
+          kammabanposition,
+          youthcomein: formatDate(youthcomein),
+          womencomein: formatDate(womencomein),
+          womenposition,
+        },
+      });
+
+      res.status(201).json({
+        message: "User created successfully!",
+        data: newUser,
+      });
     } catch (err) {
       console.error("Server error:", err);
       res.status(500).send("Server Error");
@@ -314,9 +447,9 @@ exports.listuser = async (req, res) => {
         roleId: 3,
         actived: "A",
         unitId: req.user.unitId,
-        id: {
-          not: req.user.id,
-        },
+        // id: {
+        //   not: req.user.id,
+        // },
       },
       orderBy: {
         id: "desc", // Change this to the field you want to sort by
@@ -471,6 +604,153 @@ exports.update = async (req, res) => {
           unitId: Number(unitId),
           chuId: Number(chuId),
           userimg: userimgPath,
+        },
+      });
+
+      res.json({ message: "Update successful!", data: updated });
+    } catch (err) {
+      console.log(err);
+      res.status(500).json({ message: "Server Error" });
+    }
+  });
+};
+
+exports.ngupdate = async (req, res) => {
+  upload(req, res, async function (err) {
+    if (err instanceof multer.MulterError) {
+      return res.status(500).json({
+        message: "Multer error occurred during upload.",
+        error: err,
+      });
+    } else if (err) {
+      return res.status(500).json({
+        message: "Unknown error occurred during upload.",
+        error: err,
+      });
+    }
+
+    try {
+      const { userId } = req.params;
+      const {
+        firstname,
+        lastname,
+        gender,
+        tel,
+        roleId,
+        positionId,
+        unitId,
+        chuId,
+        datebirth,
+        tribe,
+        religion,
+        villagebirth,
+        districtbirth,
+        provincebirth,
+        villagenow,
+        districtnow,
+        provincenow,
+        edusaman,
+        edulevel,
+        edusubject,
+        edutheory,
+        phaksupport,
+        phakrule,
+        phaksamhong,
+        phaksomboun,
+        phakposition,
+        phakcard,
+        phakissuedcard,
+        phakbook,
+        latcomein,
+        latposition,
+        latdepartment,
+        latdivision,
+        latunit,
+        kammabancomein,
+        kammabanposition,
+        youthcomein,
+        womencomein,
+        womenposition,
+      } = req.body;
+
+      // Step 1: Find the user to update
+      const user = await prisma.user.findUnique({
+        where: {
+          id: Number(userId),
+        },
+      });
+
+      if (!user) {
+        return res.status(404).json({ message: "User not found" });
+      }
+
+      // Step 2: If a new photo is uploaded and an old photo exists, delete the old photo
+      let userimgPath = user.userimg; // Keep old photo path
+      if (req.file) {
+        // Only attempt to delete if there is an existing photo path
+        if (user.userimg) {
+          const oldUserimgPath = path.join(
+            process.env.UPLOAD_BASE_PATH,
+            "user",
+            path.basename(user.userimg)
+          );
+          fs.unlink(oldUserimgPath, (err) => {
+            if (err) {
+              console.error("Error deleting old image: ", err);
+            }
+          });
+        }
+
+        // Set the new photo path
+        userimgPath = `${req.file.filename}`;
+      }
+
+      // Step 3: Update the user record
+      const updated = await prisma.user.update({
+        where: {
+          id: Number(userId),
+        },
+        data: {
+          firstname,
+          lastname,
+          gender,
+          tel,
+          roleId: Number(roleId),
+          positionId: Number(positionId),
+          unitId: Number(unitId),
+          chuId: Number(chuId),
+          userimg: userimgPath,
+          datebirth: formatDate(datebirth),
+          tribe,
+          religion,
+          villagebirth,
+          districtbirth,
+          provincebirth,
+          villagenow,
+          districtnow,
+          provincenow,
+          edusaman,
+          edulevel,
+          edusubject,
+          edutheory,
+          latcomein: formatDate(latcomein),
+          latposition,
+          latdepartment,
+          latdivision,
+          latunit,
+          phaksupport: formatDate(phaksupport),
+          phakrule: formatDate(phakrule),
+          phaksamhong: formatDate(phaksamhong),
+          phaksomboun: formatDate(phaksomboun),
+          phakposition,
+          phakcard,
+          phakissuedcard: formatDate(phakissuedcard),
+          phakbook,
+          kammabancomein: formatDate(kammabancomein),
+          kammabanposition,
+          youthcomein: formatDate(youthcomein),
+          womencomein: formatDate(womencomein),
+          womenposition,
         },
       });
 
@@ -695,6 +975,105 @@ exports.updateprofile = async (req, res) => {
       res.status(500).json({ message: "Server Error" });
     }
   });
+};
+
+exports.updateDataHRM = async (req, res) => {
+  try {
+    const { userId } = req.params;
+    const { code } = req.body;
+
+    const user = await prisma.user.findUnique({
+      where: {
+        id: Number(userId),
+      },
+    });
+
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    const token = await loginAndGetToken();
+    if (!token) {
+      return res.status(500).json({ message: "Failed to get API token" });
+    }
+
+    const response = await axios.get(
+      `${process.env.URL_API}/organization-svc/employee/get?search=${code}`,
+      { headers: { Authorization: `Bearer ${token}` } }
+    );
+
+    const employees = response.data.data?.employees;
+
+    if (!employees || employees.length === 0) {
+      return res.status(404).json({
+        message: `No employees found for code: ${code}`,
+      });
+    }
+
+    const emp_id = employees[0].emp_id;
+
+    const userResponse = await axios.get(
+      `${process.env.URL_API}/organization-svc/employee/getEmpDetail/${emp_id}`,
+      { headers: { Authorization: `Bearer ${token}` } }
+    );
+
+    const userData = userResponse.data.data;
+    if (!userData || Object.keys(userData).length === 0) {
+      return res.status(404).json({
+        message: `No employee details found for emp_id: ${emp_id}`,
+      });
+    }
+
+    // 🔎 find party info
+    const party1 = userData.party?.find((p) => p.organize_type_id === 1);
+    const party4 = userData.party?.find((p) => p.organize_type_id === 4);
+    const party6 = userData.party?.find((p) => p.organize_type_id === 6);
+    const party8 = userData.party?.find((p) => p.organize_type_id === 8);
+
+    const updated = await prisma.user.update({
+      where: {
+        id: Number(userId),
+      },
+      data: {
+        firstname: userData.first_name_la,
+        lastname: userData.last_name_la,
+        gender: userData.gender,
+        datebirth: formatDate(userData.birthday),
+        tribe: userData.nationalitys?.nationality ?? null,
+        religion: userData.religions?.religion_name ?? null,
+        villagebirth: userData.village?.village_name ?? null,
+        districtbirth: userData.district?.district_name ?? null,
+        provincebirth: userData.province?.province_name ?? null,
+        villagenow: userData.curVillage?.village_name ?? null,
+        districtnow: userData.curDistrict?.district_name ?? null,
+        provincenow: userData.curProvince?.province_name ?? null,
+        edulevel: userData.education?.[0]?.educationType?.edu_type_name ?? null,
+        edusubject: userData.education?.[0]?.subject?.subject_name ?? null,
+        latcomein: formatDate(userData.placeOffice?.revolution_date),
+        latposition: userData.placeOffice?.position?.pos_name ?? null,
+        latdepartment:
+          userData.placeOffice?.department?.department_name ?? null,
+        latdivision: userData.placeOffice?.division?.division_name ?? null,
+        latoffice: userData.placeOffice?.office?.office_name ?? null,
+        latunit: userData.placeOffice?.unit?.unit_name ?? null,
+        phaksamhong: formatDate(party8?.party_date),
+        phaksomboun: formatDate(party8?.join_date),
+        phakposition: party8?.party_position ?? null,
+        kammabancomein: formatDate(party6?.party_date),
+        kammabanposition: party6?.party_position ?? null,
+        youthcomein: formatDate(party1?.party_date),
+        womencomein: formatDate(party4?.party_date),
+        womenposition: party4?.party_position ?? null,
+      },
+    });
+
+    return res.status(201).json({
+      message: "Update successfully from API!",
+      data: updated,
+    });
+  } catch (error) {
+    res.status(500).json({ error: "​ອັບ​ເດດ​ບໍ່​ສ​ຳ​ເລັ​ດ" });
+  }
 };
 
 exports.changepassword = async (req, res) => {
