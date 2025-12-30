@@ -452,7 +452,10 @@ exports.listuser = async (req, res) => {
         // },
       },
       orderBy: {
-        id: "desc", // Change this to the field you want to sort by
+        // id: "desc",
+        chu: {
+          code: "asc",
+        },
       },
       select: {
         id: true,
