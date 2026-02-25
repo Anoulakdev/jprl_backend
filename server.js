@@ -1,4 +1,4 @@
-require("dotenv").config();
+require("dotenv").config({ quiet: true });
 
 const express = require("express");
 const swaggerUi = require("swagger-ui-express");
@@ -25,7 +25,7 @@ app.use(
       }
     },
     credentials: true,
-  })
+  }),
 );
 
 // middleware

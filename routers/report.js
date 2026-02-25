@@ -44,10 +44,10 @@ router.get(
   "/reports/selectdaterangecount",
   auth,
   checkRole([2]),
-  selectdaterangecount
+  selectdaterangecount,
 );
 router.get("/reports/useractall", auth, checkRole([2]), useractall);
-router.get("/reports/userall", auth, checkRole([2]), userall);
+router.get("/reports/userall", auth, checkRole([2, 3]), userall);
 
 // Meeting
 router.get("/reports/yearusermeet", auth, checkRole([3]), yearusermeet);
@@ -57,19 +57,19 @@ router.get(
   "/reports/selectmeetyearuser",
   auth,
   checkRole([2]),
-  selectmeetyearuser
+  selectmeetyearuser,
 );
 router.get(
   "/reports/selectmeetdaterange",
   auth,
   checkRole([2]),
-  selectmeetdaterange
+  selectmeetdaterange,
 );
 router.get(
   "/reports/selectmeetdaterangecount",
   auth,
   checkRole([2]),
-  selectmeetdaterangecount
+  selectmeetdaterangecount,
 );
 router.get("/reports/usermeetall", auth, checkRole([2]), usermeetall);
 
