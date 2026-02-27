@@ -35,7 +35,7 @@ async function loginAndGetToken() {
       {
         username: process.env.USERNAME_API,
         password: process.env.PASSWORD_API,
-      }
+      },
     );
 
     return loginResponse.data.data.accessToken;
@@ -86,7 +86,7 @@ exports.create = (req, res) => {
       const salt = await bcrypt.genSalt(10);
       const hashPassword = await bcrypt.hash(
         process.env.DEFAULT_PASSWORD,
-        salt
+        salt,
       );
 
       if (username) {
@@ -119,7 +119,7 @@ exports.create = (req, res) => {
 
         const response = await axios.get(
           `${process.env.URL_API}/organization-svc/employee/get?search=${code}`,
-          { headers: { Authorization: `Bearer ${token}` } }
+          { headers: { Authorization: `Bearer ${token}` } },
         );
 
         const employees = response.data.data?.employees;
@@ -134,7 +134,7 @@ exports.create = (req, res) => {
 
         const userResponse = await axios.get(
           `${process.env.URL_API}/organization-svc/employee/getEmpDetail/${emp_id}`,
-          { headers: { Authorization: `Bearer ${token}` } }
+          { headers: { Authorization: `Bearer ${token}` } },
         );
 
         const userData = userResponse.data.data;
@@ -278,7 +278,7 @@ exports.ngcreate = (req, res) => {
       const salt = await bcrypt.genSalt(10);
       const hashPassword = await bcrypt.hash(
         process.env.DEFAULT_PASSWORD,
-        salt
+        salt,
       );
 
       const newUser = await prisma.user.create({
@@ -345,7 +345,10 @@ exports.listsuperadmin = async (req, res) => {
     const users = await prisma.user.findMany({
       where: {
         roleId: {
-          in: [2, 4],
+          in: [1, 2, 4],
+        },
+        id: {
+          not: req.user.id,
         },
       },
       orderBy: {
@@ -369,6 +372,7 @@ exports.listsuperadmin = async (req, res) => {
         position: true,
         unit: true,
         chu: true,
+        role: true,
       },
     });
 
@@ -578,7 +582,7 @@ exports.update = async (req, res) => {
           const oldUserimgPath = path.join(
             process.env.UPLOAD_BASE_PATH,
             "user",
-            path.basename(user.userimg)
+            path.basename(user.userimg),
           );
           fs.unlink(oldUserimgPath, (err) => {
             if (err) {
@@ -695,7 +699,7 @@ exports.ngupdate = async (req, res) => {
           const oldUserimgPath = path.join(
             process.env.UPLOAD_BASE_PATH,
             "user",
-            path.basename(user.userimg)
+            path.basename(user.userimg),
           );
           fs.unlink(oldUserimgPath, (err) => {
             if (err) {
@@ -785,7 +789,7 @@ exports.remove = async (req, res) => {
       const userimgPath = path.join(
         process.env.UPLOAD_BASE_PATH,
         "user",
-        user.userimg
+        user.userimg,
       );
       fs.unlink(userimgPath, (err) => {
         if (err) {
@@ -902,7 +906,7 @@ exports.updateprofile = async (req, res) => {
           const oldUserimgPath = path.join(
             process.env.UPLOAD_BASE_PATH,
             "user",
-            path.basename(user.userimg)
+            path.basename(user.userimg),
           );
           fs.unlink(oldUserimgPath, (err) => {
             if (err) {
@@ -1002,7 +1006,7 @@ exports.updateDataHRM = async (req, res) => {
 
     const response = await axios.get(
       `${process.env.URL_API}/organization-svc/employee/get?search=${code}`,
-      { headers: { Authorization: `Bearer ${token}` } }
+      { headers: { Authorization: `Bearer ${token}` } },
     );
 
     const employees = response.data.data?.employees;
@@ -1017,7 +1021,7 @@ exports.updateDataHRM = async (req, res) => {
 
     const userResponse = await axios.get(
       `${process.env.URL_API}/organization-svc/employee/getEmpDetail/${emp_id}`,
-      { headers: { Authorization: `Bearer ${token}` } }
+      { headers: { Authorization: `Bearer ${token}` } },
     );
 
     const userData = userResponse.data.data;

@@ -83,6 +83,42 @@ app.get("/upload/meeting/:filename", (req, res) => {
   }
 });
 
+app.get("/upload/category/:filename", (req, res) => {
+  const filePath = path.join(UPLOAD_BASE_PATH, "category", req.params.filename);
+  if (fs.existsSync(filePath)) {
+    res.sendFile(filePath);
+  } else {
+    res.status(404).json({ error: "File not found" });
+  }
+});
+
+app.get("/upload/bank/:filename", (req, res) => {
+  const filePath = path.join(UPLOAD_BASE_PATH, "bank", req.params.filename);
+  if (fs.existsSync(filePath)) {
+    res.sendFile(filePath);
+  } else {
+    res.status(404).json({ error: "File not found" });
+  }
+});
+
+app.get("/upload/product/:filename", (req, res) => {
+  const filePath = path.join(UPLOAD_BASE_PATH, "product", req.params.filename);
+  if (fs.existsSync(filePath)) {
+    res.sendFile(filePath);
+  } else {
+    res.status(404).json({ error: "File not found" });
+  }
+});
+
+app.get("/upload/payment/:filename", (req, res) => {
+  const filePath = path.join(UPLOAD_BASE_PATH, "payment", req.params.filename);
+  if (fs.existsSync(filePath)) {
+    res.sendFile(filePath);
+  } else {
+    res.status(404).json({ error: "File not found" });
+  }
+});
+
 // Other middleware and routes
 app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(swaggerSpec));
 // Step 3 Routing

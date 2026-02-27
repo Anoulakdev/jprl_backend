@@ -5,7 +5,7 @@ const axios = require("axios");
 
 exports.login = async (req, res) => {
   try {
-    const { username, password } = req.body;
+    const { username, password, platform, model, fcmtoken } = req.body;
     if (!username) {
       return res
         .status(400)
@@ -146,6 +146,37 @@ exports.login = async (req, res) => {
       });
     }
 
+    // ===== OPTIONAL FCM SECTION =====
+    if (platform && model && fcmtoken) {
+      const checkfcm = await prisma.fcmToken.findFirst({
+        where: {
+          userId: user.id,
+          platform: platform,
+          model: model,
+        },
+      });
+
+      if (checkfcm) {
+        await prisma.fcmToken.update({
+          where: {
+            id: checkfcm.id,
+          },
+          data: {
+            fcmtoken: fcmtoken,
+          },
+        });
+      } else {
+        await prisma.fcmToken.create({
+          data: {
+            userId: user.id,
+            platform: platform,
+            model: model,
+            fcmtoken: fcmtoken,
+          },
+        });
+      }
+    }
+
     const userWithAll = await prisma.user.findUnique({
       where: { id: user.id },
       include: {
@@ -153,8 +184,13 @@ exports.login = async (req, res) => {
         position: true,
         unit: true,
         chu: true,
+        shop: true,
       },
     });
+
+    const openshop =
+      userWithAll.shop && userWithAll.shop.approved === 2 ? true : false;
+
     // Step 3 Create payload
     const payload = {
       id: userWithAll.id,
@@ -170,14 +206,17 @@ exports.login = async (req, res) => {
       positionId: userWithAll.positionId,
       unitId: userWithAll.unitId,
       chuId: userWithAll.chuId,
+      shopId: userWithAll.shop?.id,
+
       role: userWithAll.role,
       position: userWithAll.position,
       unit: userWithAll.unit,
       chu: userWithAll.chu,
+      openshop: openshop,
     };
     // Step 4 Create Token
     const accessToken = jwt.sign(payload, process.env.JWT_SECRET, {
-      expiresIn: "1h",
+      expiresIn: "3h",
     });
     res.status(200).json({
       user: payload,
