@@ -216,7 +216,7 @@ exports.login = async (req, res) => {
     };
     // Step 4 Create Token
     const accessToken = jwt.sign(payload, process.env.JWT_SECRET, {
-      expiresIn: "3h",
+      expiresIn: "8h",
     });
     res.status(200).json({
       user: payload,
@@ -239,6 +239,9 @@ exports.profile = async (req, res) => {
     const user = await prisma.user.findUnique({
       where: {
         code: req.user.code, // Use the user ID from the decoded token
+      },
+      include: {
+        shop: true,
       },
     });
 

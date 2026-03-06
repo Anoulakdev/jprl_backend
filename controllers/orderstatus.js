@@ -114,7 +114,7 @@ exports.create = (req, res) => {
         const message = {
           notification: {
             title: psname?.name,
-            body: `ເລກທີ່ອໍເດີ ${order.orderNo}`,
+            body: `ເລກທີອໍເດີ ${order.orderNo}`,
           },
           data: {
             orderId: String(order.id),

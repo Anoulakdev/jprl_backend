@@ -131,7 +131,7 @@ exports.create = async (req, res) => {
         const message = {
           notification: {
             title: "ມີອໍເດີໃໝ່ເຂົ້າ",
-            body: `ມີອໍເດີໃໝ່ເລກທີ່ ${order.orderNo} ຂອງ ${
+            body: `ມີອໍເດີໃໝ່ເລກທີ ${order.orderNo} ຂອງ ${
               req.user.gender === "Male" ? "ທ່ານ" : "ທ່ານນາງ"
             } ${req.user.firstname} ${req.user.lastname}`,
           },
