@@ -506,6 +506,7 @@ exports.getById = async (req, res) => {
                 gender: true,
                 tel: true,
                 code: true,
+                unit: true,
               },
             },
             createdAt: true,
