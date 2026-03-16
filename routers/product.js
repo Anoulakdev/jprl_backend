@@ -13,6 +13,7 @@ const {
   listapproved,
   actionapproved,
   listUser,
+  updateProductStatus,
 } = require("../controllers/product");
 // middleware
 const { auth, checkRole } = require("../middleware/auth");
@@ -32,6 +33,13 @@ router.get("/products/:productId", auth, checkRole([3, 4]), getById);
 router.post("/products", auth, checkRole([3]), create);
 
 router.put("/products/:productId", auth, checkRole([3]), update);
+
+router.put(
+  "/products/status/:productId",
+  auth,
+  checkRole([3]),
+  updateProductStatus,
+);
 
 router.put(
   "/products/approved/:productId",

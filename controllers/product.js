@@ -96,6 +96,7 @@ exports.list = async (req, res) => {
           ? Number(req.query.categoryId)
           : undefined,
         approved: 2,
+        actived: "A",
         ...(shopId
           ? {
               NOT: {
@@ -200,6 +201,7 @@ exports.listpopular = async (req, res) => {
       where: {
         id: { in: productIds },
         approved: 2,
+        actived: "A",
         ...(req.query.categoryId
           ? { categoryId: Number(req.query.categoryId) }
           : {}),
@@ -535,6 +537,23 @@ exports.update = async (req, res) => {
       res.status(500).json({ message: "Server Error" });
     }
   });
+};
+
+exports.updateProductStatus = async (req, res) => {
+  const { productId } = req.params;
+  const { actived } = req.body;
+
+  try {
+    // ตัวอย่างการอัปเดตในฐานข้อมูลด้วย Prisma
+    const updatedProduct = await prisma.product.update({
+      where: { id: Number(productId) },
+      data: { actived },
+    });
+
+    res.status(200).json({ message: "ອັບ​ເດດ​ສຳ​ເລັດ", user: updatedProduct });
+  } catch (error) {
+    res.status(500).json({ error: "​ອັບ​ເດດ​ບໍ່​ສ​ຳ​ເລັ​ດ" });
+  }
 };
 
 exports.remove = async (req, res) => {
