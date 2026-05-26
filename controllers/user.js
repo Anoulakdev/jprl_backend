@@ -396,10 +396,42 @@ exports.listsuperadmin = async (req, res) => {
 
 exports.listadmin = async (req, res) => {
   try {
+    const page = parseInt(req.query.page) || 1;
+    const limit = parseInt(req.query.limit) || 10;
+    const search = req.query.search || "";
+    const skip = (page - 1) * limit;
+
+    // Build Prisma query condition
+    let whereCondition = {
+      roleId: 3,
+    };
+
+    if (search.trim() !== "") {
+      whereCondition.OR = [
+        { code: { contains: search, mode: "insensitive" } },
+        { firstname: { contains: search, mode: "insensitive" } },
+        { lastname: { contains: search, mode: "insensitive" } },
+        { tel: { contains: search, mode: "insensitive" } },
+        { position: { name: { contains: search, mode: "insensitive" } } },
+        {
+          unit: {
+            name: { contains: search, mode: "insensitive" },
+          },
+        },
+        { chu: { name: { contains: search, mode: "insensitive" } } },
+      ];
+    }
+
+    // Get total matching record count
+    const total = await prisma.user.count({
+      where: whereCondition,
+    });
+
+    // Fetch matching records with skip/take
     const users = await prisma.user.findMany({
-      where: {
-        roleId: 3,
-      },
+      where: whereCondition,
+      skip: skip,
+      take: limit,
       orderBy: {
         id: "desc",
       },
@@ -415,11 +447,12 @@ exports.listadmin = async (req, res) => {
         roleId: true,
         positionId: true,
         unitId: true,
-        roleId: true,
         chuId: true,
         position: true,
         unit: true,
         chu: true,
+        createdAt: true,
+        updatedAt: true,
         DetailActUser: {
           take: 1,
         },
@@ -437,7 +470,13 @@ exports.listadmin = async (req, res) => {
         .format("YYYY-MM-DD HH:mm:ss"),
     }));
 
-    res.json(formattedUsers);
+    res.json({
+      users: formattedUsers,
+      total: total,
+      page: page,
+      limit: limit,
+      totalPages: Math.ceil(total / limit),
+    });
   } catch (err) {
     console.log(err);
     res.status(500).json({ message: "Server Error" });
